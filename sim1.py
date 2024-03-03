@@ -73,7 +73,7 @@ d_idx = 0
 for idx in range(0,N_rx):
     # Si es un multiplo de pilot_period, es un piloto
     if idx%pilot_period == 0:
-        #Estimacion canal
+        #Estimacion canal LS, y lo invierto
         Hinv=np.divide(tx_pilot, rx_symb[:,idx]) 
     else:
         rx_ofdm_symb[:,d_idx] = Hinv * rx_symb[:,idx]
