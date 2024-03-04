@@ -6,6 +6,8 @@ Created on Sat Mar  2 19:38:43 2024
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 # Mapeo 16-QAM
 
 QAM_bits_per_symbol = 4
@@ -104,3 +106,30 @@ def test_qam_bits():
     Nqam = 1000
     bits = np.random.randint(2,size=4*Nqam, dtype=np.uint8)
     assert np.all(bits == qam_to_bits(bits_to_qam(bits)))
+    
+    
+def plot_qam_constellation(sym_array:np.array):
+    p = sym_array.reshape(-1)
+    plt.plot(p.real, p.imag, 'bo')
+    
+    symbs = np.array([QAM(n) for n in np.arange(16)])
+    plt.plot(symbs.real, symbs.imag, ".r")
+    
+    for s in symbs:
+        v_bits = qam_to_bits(np.array([s]))
+        txt = "".join(np.char.mod('%d',v_bits))
+        plt.text(s.real, s.imag+0.2, txt, ha='center')
+    
+    plt.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
+    plt.title("16-QAM")
+
+
+
+def plot_ofdm_symbs(sym_array:np.array):
+    
+    for b3 in [0, 1]:
+        for b2 in [0, 1]:
+            for b1 in [0, 1]:
+                for b0 in [0, 1]:
+                    B = (b3, b2, b1, b0)
+                    plt.plot(sym_array.real, sym_array.imag, 'ro')

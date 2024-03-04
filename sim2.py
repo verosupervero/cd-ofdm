@@ -7,6 +7,7 @@ Created on Sat Mar  2 15:59:31 2024
 #%% Inicializar sim
 import numpy as np
 import QAM16 as qam
+import channels
 
 sz = lambda x: (np.size(x,0), np.size(x,1))
 
@@ -28,10 +29,9 @@ data_qam = qam.bits_to_qam(data_bits)
 # Conversion serie a paralelo
 data_par = data_qam.reshape(N, -1)
 
-# Agrego pilotos (en el tiempo una delta, en frecuencia 1111111..)
+# Agrego pilotos (en la frecuencia, todos unos)
 pilot_amplitude = qam.QAM(0)
-pilot_symbol = np.zeros(N, dtype=data_par.dtype)
-pilot_symbol[0] = pilot_amplitude
+pilot_symbol = np.ones(N, dtype=data_par.dtype)
 
 N_ODFM_sym = np.size(data_par,axis=1)
 N_pilots = N_ODFM_sym // pilot_period + 1
@@ -49,14 +49,16 @@ for data_idx in range(0,N_ODFM_sym):
     all_symb[:,symb_idx] = data_par[:,data_idx]
     symb_idx = symb_idx+1
 
-
 #%% Convierto a ODFM
 import ofdm
-tx_symb = ofdm.mod(all_symb)
-tx_pilot = tx_symb[:,0]
+#tx_symb = ofdm.mod(all_symb)
+#tx_pilot = ofdm.mod(all_symb[:,0])
 
 #%% Canal
-rx_symb = (0.5)*tx_symb + 0.002*np.random.standard_normal(sz(tx_symb))
+H = channels.fadding_channel(N) #Canal en frecuencia
+rx_noise = 0.2*np.random.standard_normal(sz(all_symb))
+# Aplico el canal sobre cada subportadora, y luego paso al dominio del tiempo
+rx_symb =  ofdm.mod(all_symb*H[:, np.newaxis]) + rx_noise
 
 #%% Recepcion
 Nport = np.size(rx_symb, axis=0)
@@ -67,22 +69,22 @@ Ndata_rx = N_rx-Npilots_rx
 # Prealoco filtro inverso y lo pongo plano
 Hinv = np.zeros((Nport,1), dtype=rx_symb.dtype)
 # Prealoco matriz para los simbolos ofdm recuperados
-rx_ofdm_symb = np.zeros((Nport,Ndata_rx), dtype=rx_symb.dtype)
+rx_fix_symb = np.zeros((Nport,Ndata_rx), dtype=rx_symb.dtype)
+
+rx_freq = ofdm.demod(rx_symb)
 
 d_idx = 0
 for idx in range(0,N_rx):
     # Si es un multiplo de pilot_period, es un piloto
     if idx%pilot_period == 0:
         #Estimacion canal LS, y lo invierto
-        Hinv=np.divide(tx_pilot, rx_symb[:,idx]) 
+        Hinv=np.divide(pilot_symbol, rx_freq[:,idx]) 
     else:
-        rx_ofdm_symb[:,d_idx] = Hinv * rx_symb[:,idx]
+        rx_fix_symb[:,d_idx] = Hinv * rx_freq[:,idx]
         d_idx = d_idx +1
 
-# Demodulo
-rx_symb = ofdm.demod(rx_ofdm_symb)
 # obtengo bits
-rx_bits = qam.qam_to_bits(rx_symb.reshape(-1))
+rx_bits = qam.qam_to_bits(rx_fix_symb.reshape(-1))
 
 # Calculo errores
 Nerr = np.sum(rx_bits != data_bits)
@@ -91,4 +93,4 @@ Perr = Nerr / np.size(data_bits)
 print(f"""Prob errrores: {Perr*100}%""")
 
 #%% graficos
-qam.plot_qam_constellation(rx_symb)
+qam.plot_qam_constellation(rx_fix_symb)
