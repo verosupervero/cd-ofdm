@@ -15,12 +15,12 @@ sz = lambda x: (np.size(x,0), np.size(x,1))
 
 N = 128 # numero de subportadoras
 pilot_period = 8 # un piloto cada esta cantidad de simbolos
-QAM_symb_len = N*20 # cantidad de simbolos QAM a transmitir
+QAM_symb_len = N*1000 # cantidad de simbolos QAM a transmitir
 CP = N // 4 # prefijo ciclico
-SNR = -10 #dB
+SNR = 30 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad
-np.random.seed(123)
+np.random.seed(1234)
 
 #  Simbolos
 Nbits = QAM_symb_len*qam.QAM_bits_per_symbol
@@ -37,20 +37,19 @@ pilot_amplitude = qam.QAM(0)
 pilot_symbol = np.ones(N, dtype=data_par.dtype)
 
 N_ODFM_sym = np.size(data_par,axis=1)
-N_pilots = N_ODFM_sym // pilot_period + 1
+N_pilots = (N_ODFM_sym // (pilot_period-1))+1
 
 # En esta matriz van los simbolos mas los pilotos
 all_symb = np.zeros((N,N_ODFM_sym+N_pilots),dtype=data_par.dtype)
 
-symb_idx=0
-for data_idx in range(0,N_ODFM_sym):
+data_idx=0
+for symb_idx in range(0,all_symb.shape[1]):
     # Si es un multiplo de pilot_period, mando un piloto
     if symb_idx%pilot_period == 0:
         all_symb[:,symb_idx] = pilot_symbol
-        symb_idx=symb_idx+1
-    
-    all_symb[:,symb_idx] = data_par[:,data_idx]
-    symb_idx = symb_idx+1
+    else:  
+        all_symb[:,symb_idx] = data_par[:,data_idx]
+        data_idx = data_idx+1
 
 #%% Convierto a ODFM
 import ofdm
@@ -66,11 +65,11 @@ rx_symb = np.zeros(all_symb.shape, dtype=all_symb.dtype)
 # SNR = 10.log(P_S/P_N)
 # 10^(SNR/10) = var(symb_QAM)/var(N)
 # var(N) = var(symb_QAM)/10^(SNR/10)
-var_noise = qam.var/pow(10, SNR/10)
+var_noise = qam.eps/pow(10, SNR/10)
 
 for idx in range(0,rx_symb.shape[1]):
     # Vario levemente el canal (canal variante en el tiempo AR-1)
-    H = 0.98*H + 0.02*channels.fadding_channel(N)
+    H = 0.99*H + 0.01*channels.fadding_channel(N)
     ofdm_noise = math.sqrt(var_noise)*np.random.standard_normal(size=N)
     rx_ofdm = all_symb[:,idx]*H + ofdm_noise
     rx_symb[:,idx] = ofdm.mod(rx_ofdm)
@@ -89,16 +88,22 @@ rx_fix_symb = np.zeros((Nport,Ndata_rx), dtype=rx_symb.dtype)
 rx_freq = ofdm.demod(rx_symb)
 
 d_idx = 0
+N0 = var_noise # TODO: ESTO DEBE ESTAR MAL CALCULADO
+#SNR_MFB = qam.eps / N0
 for idx in range(0,N_rx):
     # Si es un multiplo de pilot_period, es un piloto
     if idx%pilot_period == 0:
         #Estimacion canal LS, y lo invierto
         Y = rx_freq[:,idx]
-        HLS=np.divide(Y, pilot_symbol)
-        #HMMSE = HLS Y^H inv(RYY) Y
-        HMMSE = HLS * Y.T.conj() * np.linalg.solve((utils.R(Y)),Y)*Y
+        # Armo una matriz H tal que Y = H X + n, donde X,Y son simbolos ofdm
+        #H=np.diag(np.divide(Y, pilot_symbol))
+        #W_mmse = H.T.conj() @ np.linalg.inv((H @ H.T.conj()) + N0 * np.eye(N))
+        H=np.divide(Y, pilot_symbol)
+        # adaptado de https://www.sharetechnote.com/html/Communication_ChannelModel_MMSE.html
+        W_mmse=np.diag(H.conj()/((abs(H)**2)+N0))
     else:
-        rx_fix_symb[:,d_idx] = rx_freq[:,idx] / HMMSE
+        rx_fix_symb[:,d_idx] = W_mmse @ rx_freq[:,idx] #MMSE
+        #rx_fix_symb[:,d_idx] = rx_freq[:,idx] / H #LS
         d_idx = d_idx +1
 
 # obtengo bits

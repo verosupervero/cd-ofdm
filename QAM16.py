@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 # Mapeo 16-QAM
 
 QAM_bits_per_symbol = 4
+QAM_Nsymb = 2**QAM_bits_per_symbol
+
 
 QAM16 = np.array([# codigo de grey
          -3-3j, -3-1j, -3+3j, -3+1j,
@@ -19,6 +21,7 @@ QAM16 = np.array([# codigo de grey
          1-3j,  1-1j,  1+3j,  1+1j])
 
 var = QAM16.var()
+eps = var/QAM_Nsymb
 
 def QAM(bits: int) -> complex:
     """
