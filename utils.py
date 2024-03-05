@@ -71,3 +71,42 @@ def add_block_pilots(M: np.array, amplitude, period) -> (np.array, np.array):
             data_idx = data_idx+1
     
     return all_symb, pilot_symbol
+
+def add_comb_pilots(M: np.array, amplitude, period) -> np.array:
+    """
+    Agrega pilotos en peine
+
+    Parameters
+    ----------
+    M : np.array
+        DESCRIPTION.
+    amplitude : TYPE
+        DESCRIPTION.
+    period : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    all_symb : TYPE
+        DESCRIPTION.
+
+    """
+    N = M.shape[0] #Cantidad subportadoras
+    
+    N_pilots = (N // (period-1))+1
+    
+    # En esta matriz van los simbolos mas los pilotos
+    all_symb = np.zeros((N+N_pilots,M.shape[1]),dtype=M.dtype)
+    peine = np.zeros((N+N_pilots,1),dtype=M.dtype)
+    data_idx=0
+    for f_idx in range(0,N+N_pilots):
+        if f_idx%period == 0:
+            # Si es un multiplo de pilot_period, mando un piloto
+            all_symb[f_idx,:] = amplitude
+            peine[f_idx] = amplitude # para devolver una muestra del peine
+        else:  
+            # Si no, copio la fila
+            all_symb[f_idx,:] = M[data_idx,:]
+            data_idx = data_idx+1
+    
+    return all_symb, peine
