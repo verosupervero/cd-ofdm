@@ -18,6 +18,8 @@ QAM16 = np.array([# codigo de grey
          3-3j,  3-1j,  3+3j,  3+1j,
          1-3j,  1-1j,  1+3j,  1+1j])
 
+var = QAM16.var()
+
 def QAM(bits: int) -> complex:
     """
     Convierte un numero de 4 bits en un simbolo 16-QAM.

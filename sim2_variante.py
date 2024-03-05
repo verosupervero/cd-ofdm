@@ -8,6 +8,7 @@ Created on Sat Mar  2 15:59:31 2024
 import numpy as np
 import QAM16 as qam
 import channels
+import math
 
 sz = lambda x: (np.size(x,0), np.size(x,1))
 
@@ -15,6 +16,7 @@ N = 128 # numero de subportadoras
 pilot_period = 8 # un piloto cada esta cantidad de simbolos
 QAM_symb_len = N*20 # cantidad de simbolos QAM a transmitir
 CP = N // 4 # prefijo ciclico
+SNR = 80 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad
 np.random.seed(123)
@@ -59,11 +61,15 @@ H = channels.fadding_channel(N) #Canal en frecuencia
 # Prealoco matriz con simbolos recibidos
 rx_symb = np.zeros(all_symb.shape, dtype=all_symb.dtype)
 
+# Calculo de la varianza del ruido
+var_noise = pow(10, qam.var - SNR/10)
+
 for idx in range(0,rx_symb.shape[1]):
-    # Vario levemente el canal (canal variante en el tiempo)
+    # Vario levemente el canal (canal variante en el tiempo AR-1)
     H = 0.98*H + 0.02*channels.fadding_channel(N)
-    noise = 0.2*np.random.standard_normal(size=N)
-    rx_symb[:,idx] =  ofdm.mod(all_symb[:,idx]*H) + noise
+    ofdm_noise = math.sqrt(var_noise)*np.random.standard_normal(size=N)
+    rx_ofdm = all_symb[:,idx]*H + ofdm_noise
+    rx_symb[:,idx] = ofdm.mod(rx_ofdm)
 
 #%% Recepcion
 Nport = np.size(rx_symb, axis=0)
