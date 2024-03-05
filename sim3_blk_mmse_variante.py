@@ -33,23 +33,7 @@ data_qam = qam.bits_to_qam(data_bits)
 data_par = data_qam.reshape(N, -1)
 
 # Agrego pilotos (en la frecuencia, todos unos)
-pilot_amplitude = qam.QAM(0)
-pilot_symbol = np.ones(N, dtype=data_par.dtype)
-
-N_ODFM_sym = np.size(data_par,axis=1)
-N_pilots = (N_ODFM_sym // (pilot_period-1))+1
-
-# En esta matriz van los simbolos mas los pilotos
-all_symb = np.zeros((N,N_ODFM_sym+N_pilots),dtype=data_par.dtype)
-
-data_idx=0
-for symb_idx in range(0,all_symb.shape[1]):
-    # Si es un multiplo de pilot_period, mando un piloto
-    if symb_idx%pilot_period == 0:
-        all_symb[:,symb_idx] = pilot_symbol
-    else:  
-        all_symb[:,symb_idx] = data_par[:,data_idx]
-        data_idx = data_idx+1
+all_symb, pilot_symbol = utils.add_block_pilots(data_par, amplitude=qam.QAM(0), period=pilot_period)
 
 #%% Convierto a ODFM
 import ofdm
