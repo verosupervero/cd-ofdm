@@ -15,8 +15,8 @@ sz = lambda x: (np.size(x,0), np.size(x,1))
 
 N = 128 # numero de subportadoras
 pilot_period = 8 # un piloto cada esta cantidad de simbolos
-QAM_symb_len = N*500 # cantidad de simbolos QAM a transmitir
-CP = N // 4 # prefijo ciclico
+N_OFDM_sym = 500
+QAM_symb_len = N*N_OFDM_sym # cantidad de simbolos QAM a transmitir
 SNRdB = 20 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad
@@ -36,11 +36,10 @@ data_par = data_qam.reshape(N, -1)
 pilot_amplitude = qam.QAM(0)
 pilot_symbol =pilot_amplitude* np.ones(N, dtype=data_par.dtype)
 
-N_ODFM_sym = np.size(data_par,axis=1)
-N_pilots = (N_ODFM_sym // (pilot_period-1))+1
+N_pilots = N_OFDM_sym // pilot_period
 
 # En esta matriz van los simbolos mas los pilotos
-all_symb = np.zeros((N,N_ODFM_sym+N_pilots),dtype=data_par.dtype)
+all_symb = np.zeros((N,N_OFDM_sym+N_pilots),dtype=data_par.dtype)
 
 data_idx=0
 for symb_idx in range(0,all_symb.shape[1]):
