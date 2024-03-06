@@ -36,11 +36,10 @@ data_qam = qam.bits_to_qam(data_bits)
 data_par = data_qam.reshape(N-cant_pilotos, -1)
 
 # Agrego pilotos
-all_symb, peine = utils.add_comb_pilots(data_par, qam.QAM(0), pilot_period,cant_pilotos)
+all_symb, pilot_symbol = utils.add_comb_pilots(data_par, qam.QAM(0), pilot_period,cant_pilotos)
 
 
 pilot_amplitude = qam.QAM(0)
-pilot_symbol=pilot_amplitude* np.ones(cant_pilotos, dtype=data_par.dtype)
 
 #%% Convierto a ODFM
 import ofdm
@@ -60,14 +59,11 @@ rx_symb = np.zeros(all_symb.shape, dtype=all_symb.dtype)
 
 for idx in range(0,rx_symb.shape[1]):
     # Vario levemente el canal (canal variante en el tiempo AR-1)
-    #x = np.zeros(128)
-   # x[0] = 1
-    #H = np.fft.fft(x)
     H = 0.998*H + 0.002*channels.fadding_channel(N)
-    rx_ofdm= utils.add_noise(all_symb[:,idx]*H,SNRdB)
+    rx_ofdm = all_symb[:,idx]*H
     #ofdm_noise = math.sqrt(var_noise)*np.random.standard_normal(size=N)
     #rx_ofdm = all_symb[:,idx]*H + ofdm_noise
-    rx_symb[:,idx] = ofdm.mod(rx_ofdm)
+    rx_symb[:,idx],noise_power = utils.add_noise(ofdm.mod(rx_ofdm),SNRdB)
 
 
 #%% Recepcion
@@ -75,22 +71,20 @@ Nport = np.size(rx_symb, axis=0) #son 128
 N_rx = np.size(rx_symb, axis=1) # son 20
 Ndata_rx = N_rx
 
-# Prealoco filtro inverso y lo pongo plano
-Hinv = np.zeros((Nport,1), dtype=rx_symb.dtype)
 # Prealoco matriz para los simbolos ofdm recuperados
-rx_fix_symb = np.zeros((Nport-cant_pilotos,Ndata_rx), dtype=rx_symb.dtype)
+rx_fix = np.zeros(rx_symb.shape, dtype=rx_symb.dtype)
 
 ##Demodulo los simbolos recibidos
 rx_freq = ofdm.demod(rx_symb)
 
+indices = np.arange(0, N,pilot_period) 
 for idx in range(0,N_rx):
-    # Si es un multiplo de pilot_period, es un piloto
-    indices = np.arange(0, N,pilot_period) 
-    pilots_rx_data = rx_freq[np.isin(np.arange(0,N),indices),idx]
-    Hinv= utils.estimate_channel(pilots_rx_data,pilot_symbol,N)
-    all_carriers = Hinv * rx_freq[:,idx]
-    rx_fix_symb[:,idx] = all_carriers[np.isin(np.arange(0,N),indices) == False]
-    
+    H_interp = utils.interp_channel(rx_freq[indices,idx], indices, N)
+    rx_fix[:,idx] = np.divide(rx_freq[:,idx], H_interp)
+
+# Saco los pilotos
+symb_idx = np.isin(np.arange(N), indices, invert=True)
+rx_fix_symb = rx_fix[symb_idx,:]
 # obtengo bits
 rx_bits = qam.qam_to_bits(rx_fix_symb.reshape(-1))
 
@@ -99,7 +93,7 @@ rx_bits = qam.qam_to_bits(rx_fix_symb.reshape(-1))
 Nerr = np.sum(rx_bits != data_bits)
 Perr = Nerr / np.size(data_bits)
 
-print(f"""Prob errrores: {Perr*100}%""")
+print(f"""BER: {Perr:.1E}""")
 
 #%% graficos
 qam.plot_qam_constellation(rx_fix_symb)
