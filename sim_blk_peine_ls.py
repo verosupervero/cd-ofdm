@@ -8,7 +8,6 @@ Created on Sat Mar  2 15:59:31 2024
 import numpy as np
 import QAM16 as qam
 import channels
-import math
 import utils
 import ofdm
 
@@ -16,7 +15,7 @@ sz = lambda x: (np.size(x,0), np.size(x,1))
 
 N = 128 # numero de subportadoras
 pilot_period_comb = 8 # un piloto cada esta cantidad de simbolos
-cant_pilotos_comb = N // pilot_period_comb #lastima que tengo que poner esto aca y en la funcion
+cant_pilotos_comb = N // pilot_period_comb 
 pilot_period_blk = 20 #pilotos bloque
 QAM_symb_len = (N-cant_pilotos_comb)*200 # cantidad de simbolos QAM a transmitir
 CP = N // 4 # prefijo ciclico

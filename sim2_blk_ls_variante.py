@@ -8,15 +8,15 @@ Created on Sat Mar  2 15:59:31 2024
 import numpy as np
 import QAM16 as qam
 import channels
-import math
 import utils
 
 sz = lambda x: (np.size(x,0), np.size(x,1))
 
 N_subportadoras = 128 # numero de subportadoras
 pilot_period = 8 # un piloto cada esta cantidad de simbolos
-N_OFDM_sym = 500
+N_OFDM_sym = 1000
 QAM_symb_len = N_subportadoras*N_OFDM_sym # cantidad de simbolos QAM a transmitir
+
 SNRdB = 20 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad

@@ -58,8 +58,11 @@ rx_symb = np.zeros(all_symb.shape, dtype=all_symb.dtype)
 #var_noise = qam.eps/pow(10, SNR/10)
 
 for idx in range(0,rx_symb.shape[1]):
-    # Vario levemente el canal (canal variante en el tiempo AR-1)
-    H = 0.998*H + 0.002*channels.fadding_channel(N)
+    # Vario levemente el canal
+    # Le vario la ganancia y fase en general, y le sumo ruido
+  #  Hgain = channels.fadding_channel(1)
+   # Hnoise = channels.fadding_channel(N)
+  #  H = (Hgain)*H + 0.01*Hnoise
     rx_ofdm = all_symb[:,idx]*H
     #ofdm_noise = math.sqrt(var_noise)*np.random.standard_normal(size=N)
     #rx_ofdm = all_symb[:,idx]*H + ofdm_noise
@@ -77,13 +80,28 @@ rx_fix = np.zeros(rx_symb.shape, dtype=rx_symb.dtype)
 ##Demodulo los simbolos recibidos
 rx_freq = ofdm.demod(rx_symb)
 
-indices = np.arange(0, N,pilot_period) 
+
+d_idx = 0      
+indices_peine = np.arange(0, N,pilot_period) 
+old_peine=pilot_symbol
 for idx in range(0,N_rx):
-    H_interp = utils.interp_channel(rx_freq[indices,idx], indices, N)
-    rx_fix[:,idx] = np.divide(rx_freq[:,idx], H_interp)
+    
+        # PEINE - Trackeo cuanto vario el H desde el simbolo anterior hasta ahora
+        Hpeine_pilotos = np.divide(rx_freq[indices_peine,d_idx].reshape(-1),
+                                   pilot_symbol[indices_peine].reshape(-1))
+        Hpeine_interp = utils.interp_channel(Hpeine_pilotos, indices_peine, N)
+        
+        # Actualizo la estimacion del simbolo actual
+        # (COMENTAR ESTA LINEA PARA COMPARA SIN CORRECION X PEINE)
+        rx_freq[:,d_idx] = rx_freq[:,d_idx] /Hpeine_interp #LS - peine
+        
+        # Para la proxima iteracion
+        old_peine = rx_freq[:,d_idx]
+        
+        d_idx = d_idx +1  
 
 # Saco los pilotos
-symb_idx = np.isin(np.arange(N), indices, invert=True)
+symb_idx = np.isin(np.arange(N), indices_peine, invert=True)
 rx_fix_symb = rx_fix[symb_idx,:]
 # obtengo bits
 rx_bits = qam.qam_to_bits(rx_fix_symb.reshape(-1))

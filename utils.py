@@ -257,3 +257,79 @@ def test_interp_channel():
     xsup = x[x>np.max(idx)]
     assert (Hinterp[xsup] ==  Hreal[np.max(idx)]).all()
 
+def interp_channel(H_pilots: np.array, idx:np.array, N, interpolation_method:str = 'cubic') -> np.array:
+    """
+    Interpolador de canal
+
+    Parameters
+    ----------
+    H_pilots : np.array
+        Muestras del canal en los valores de idx
+    idx : np.array
+        Indice de las muestras
+    N : TYPE
+        Largo del canal interpolado
+    interpolation_method : str, optional
+        Metodo de interpolacion segun scipy.interpolate.interp1d
+        Por defecto: 'lineal'
+
+    Returns
+    -------
+    H_interp
+        Canal interpolado desde 0 a N
+
+    """
+    x = np.arange(N) #absisas
+    
+    # Interp no extrapola, asi que aplano los puntos que esten
+    # antes del primer piloto o despues del ultimo
+    x[(x<np.min(idx))] = np.min(idx)
+    x[(x>np.max(idx))] = np.max(idx)
+    f = scipy.interpolate.interp1d(idx, H_pilots, kind=interpolation_method)
+    
+    return f(x)
+
+
+def ajustar_channel(H_pilots: np.array, indices:np.array, N, interpolation_method:str = 'linear') -> np.array:
+    """
+    Interpolador de canal
+
+    Parameters
+    ----------
+    H_pilots : np.array
+        Muestras del canal en los valores de idx
+    indices : np.array
+        Indice de las muestras
+    N : TYPE
+        Largo del canal interpolado
+    interpolation_method : str, optional
+        Metodo de interpolacion segun scipy.interpolate.interp1d
+        Por defecto: 'lineal'
+
+    Returns
+    -------
+    H_interp
+        Canal interpolado desde 0 a N
+
+    """
+    
+    x = np.arange(N) #absisas
+    
+    # Interp no extrapola, asi que aplano los puntos que esten
+    # antes del primer piloto o despues del ultimo
+    x[(x<np.min(indices))] = np.min(indices)
+    x[(x>np.max(indices))] = np.max(indices)
+    
+    # Encontrar el polinomio que ajusta los datos seleccionados
+    grado_polinomio = len(H_pilots) - 1
+    coeficientes_polinomio = np.polyfit(indices, H_pilots, grado_polinomio)
+
+    # Crear el polinomio a partir de los coeficientes
+    polinomio = np.poly1d(coeficientes_polinomio)
+
+    # Evaluar el polinomio en todos los índices para interpolar los datos
+    H_interp = polinomio(indices)
+    
+    return H_interp
+
+
