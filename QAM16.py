@@ -127,6 +127,7 @@ def plot_qam_constellation(sym_array:np.array):
     
     plt.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
     plt.title("16-QAM")
+    plt.axis([-5, 5, -5, 5])
 
 
 
