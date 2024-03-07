@@ -31,7 +31,7 @@ for snr in SNRdB_vec:
     np.random.seed(1111) # Para tener la misma dinamica de canal en todas
     # Paso la señal por mi canal
     # paso simbolos ofdm por canal, modulo ofdm->tiempo, agrego ruido, demodulo tiempo -> simbolos ofdm_rx
-    rx_symb, noise_power = sim_ofdm.simular_canal_fading_variante(all_symb, snr, Hinit)
+    rx_symb, noise_power = sim_ofdm.simular_canal_fading_variante(all_symb, snr, Hinit, Hexp=0, HRWalk=0.002)
     
     # Demodulo
     bits_rx, rx_fix_symb = sim_ofdm.sim_demodular(rx_symb, pilot_period_blk,
@@ -39,7 +39,7 @@ for snr in SNRdB_vec:
                                                   pilot_symbol_blk,
                                                   pilot_symbol_comb,
                                                   noise_power,
-                                                  use_comb=True,
+                                                  use_comb=False,
                                                   use_blk=True)
    
     # Calculo errores
@@ -56,7 +56,7 @@ plt.semilogy(list(ber.keys()), [ber[k] for k in ber.keys()])
 # Guarda la figura como un archivo PNG
 now = datetime.now()
 timestamp = now.strftime("%Y%m%d_%H%M%S")
-plt.savefig(f"""BER_SNR_blk_peine_{timestamp}.png""")
+plt.savefig(f"""BER_SNR_blk_{timestamp}.png""")
 # Muestra el gráfico
 plt.xlabel('SNR (dB)')
 plt.ylabel('BER')
@@ -66,4 +66,4 @@ plt.show()
 plt.figure(2)
 qam.plot_qam_constellation(rx_fix_symb)
 plt.title(f"""16-QAM SNR={snr}dB""")
-plt.savefig(f"""Constelacion_SNR_blk_peine_{timestamp}.png""")
+plt.savefig(f"""Constelacion_SNR_blk_{timestamp}.png""")

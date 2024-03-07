@@ -61,6 +61,31 @@ def generar_simbolos_tx_blk_peine(N:int, pilot_period_comb:int, pilot_period_blk
     return all_symb, pilot_symbol_blk, pilot_symbol_comb,data_bits
 
 def simular_canal_fading_variante(all_symb, SNRdB,Hinit, Hexp:float=1.0, HRWalk:float=0.01):
+    """
+    Genero un canal fading variante en el tiempo.
+    Con Hexp se controla la variacion temporal: 1-> varia mucho, 0->constante
+    HRWalk es la amplitud de un ruido aditivo al canal. 
+    Parameters
+    ----------
+    all_symb : TYPE
+        DESCRIPTION.
+    SNRdB : TYPE
+        DESCRIPTION.
+    Hinit : TYPE
+        DESCRIPTION.
+    Hexp : float, optional
+        Variacion temporal. Entre 0.0 y 1.0. No validado. The default is 1.0.
+    HRWalk : float, optional
+        Amplitud de ruido aditivo. The default is 0.01.
+
+    Returns
+    -------
+    rx_symb : TYPE
+        DESCRIPTION.
+    noise_power : TYPE
+        DESCRIPTION.
+
+    """
     N = all_symb.shape[0]
     
     # Canal inicial
@@ -72,7 +97,7 @@ def simular_canal_fading_variante(all_symb, SNRdB,Hinit, Hexp:float=1.0, HRWalk:
     # Luego lo convierto a tiempo y le sumo ruido
     for idx in range(0,all_symb.shape[1]):
         # Le vario la ganancia y fase en general, y le sumo ruido
-        Hgain = Hexp*channels.fadding_channel(1) # Comportamiento exponenecial
+        Hgain = (1.0-Hexp) + Hexp*channels.fadding_channel(1) # Comportamiento exponenecial
         Hnoise = HRWalk*channels.fadding_channel(N) # Random walk
         
         # Vario canal
@@ -87,6 +112,38 @@ def simular_canal_fading_variante(all_symb, SNRdB,Hinit, Hexp:float=1.0, HRWalk:
     return rx_symb, noise_power
 
 def sim_demodular(rx_symb, pilot_period_blk, pilot_period_comb,pilot_symbol_blk,pilot_symbol_comb, noise_power, use_comb=True, use_blk=True):
+    """
+    Demodula la señal temporal OFDM rx_simb, ecualiza, y entrega los bits
+    y los simbolos qam.
+    use_comb y use_blk controlan el ecualizador por peine y pilotos respectivamente.
+
+    Parameters
+    ----------
+    rx_symb : TYPE
+        DESCRIPTION.
+    pilot_period_blk : TYPE
+        DESCRIPTION.
+    pilot_period_comb : TYPE
+        DESCRIPTION.
+    pilot_symbol_blk : TYPE
+        DESCRIPTION.
+    pilot_symbol_comb : TYPE
+        DESCRIPTION.
+    noise_power : TYPE
+        DESCRIPTION.
+    use_comb : TYPE, optional
+        Habilitar ecualizador peine LS. The default is True.
+    use_blk : TYPE, optional
+        Habilitar ecualizador bloque MMSE. The default is True.
+
+    Returns
+    -------
+    rx_bits : TYPE
+        DESCRIPTION.
+    rx_fix_symb : TYPE
+        DESCRIPTION.
+
+    """
     N = rx_symb.shape[0]
     #%% Recepcion BLK MMSE
     Nport = np.size(rx_symb, axis=0)
