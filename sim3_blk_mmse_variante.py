@@ -50,6 +50,7 @@ rx_symb = np.zeros(all_symb.shape, dtype=all_symb.dtype)
 
 for idx in range(0,rx_symb.shape[1]):
     # Vario levemente el canal (canal variante en el tiempo AR-1)
+    #H = 0.998*H + 0.002*channels.fadding_channel(N_subportadoras)
     H = 0.998*H + 0.002*channels.fadding_channel(N_subportadoras)
     rx_ofdm = all_symb[:,idx]*H
     #ofdm_noise = math.sqrt(var_noise)*np.random.standard_normal(size=N)

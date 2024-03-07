@@ -13,14 +13,14 @@ import utils
 sz = lambda x: (np.size(x,0), np.size(x,1))
 
 N_subportadoras = 128 # numero de subportadoras
-pilot_period = 8 # un piloto cada esta cantidad de simbolos
+pilot_period = 20 # un piloto cada esta cantidad de simbolos
 N_OFDM_sym = 1000
 QAM_symb_len = N_subportadoras*N_OFDM_sym # cantidad de simbolos QAM a transmitir
 
-SNRdB = 10 #dB
+SNRdB = 20 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad
-np.random.seed(12345)
+np.random.seed(123)
 
 #  Simbolos
 Nbits = QAM_symb_len*qam.QAM_bits_per_symbol #cantidad de bits a generar
