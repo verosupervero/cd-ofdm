@@ -17,9 +17,9 @@ N = 128 # numero de subportadoras
 pilot_period_comb = 8 # un piloto cada esta cantidad de simbolos
 cant_pilotos_comb = N // pilot_period_comb 
 pilot_period_blk = 20 #pilotos bloque
-QAM_symb_len = (N-cant_pilotos_comb)*200 # cantidad de simbolos QAM a transmitir
+QAM_symb_len = (N-cant_pilotos_comb)*1000 # cantidad de simbolos QAM a transmitir
 CP = N // 4 # prefijo ciclico
-SNRdB = 30 #dB
+SNRdB = 28 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad
 np.random.seed(123)

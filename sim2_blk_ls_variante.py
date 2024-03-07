@@ -17,7 +17,7 @@ pilot_period = 8 # un piloto cada esta cantidad de simbolos
 N_OFDM_sym = 1000
 QAM_symb_len = N_subportadoras*N_OFDM_sym # cantidad de simbolos QAM a transmitir
 
-SNRdB = 20 #dB
+SNRdB = 10 #dB
 
 # Para siempre generar los mimsos numeros aleatorios y tener repetibilidad
 np.random.seed(12345)
