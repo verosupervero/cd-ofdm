@@ -205,3 +205,7 @@ def sim_demodular(rx_symb, pilot_period_blk, pilot_period_comb,pilot_symbol_blk,
     rx_bits = qam.qam_to_bits(rx.reshape(-1))
     
     return rx_bits,rx_fix_symb
+
+def calc_ber(rx_bits, tx_bits):
+    Nerr = np.sum(rx_bits != tx_bits)
+    return Nerr / np.size(tx_bits)
