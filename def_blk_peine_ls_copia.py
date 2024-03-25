@@ -132,13 +132,14 @@ def sim(SNRdB, per_peine=8, per_bloque=20, hab_peine=True, variante=False):
     # obtengo bits
     rx_bits = qam.qam_to_bits(rx.reshape(-1))
     
-    
+
     # Calculo errores
+    print(rx_bits != data_bits)
     Nerr = np.sum(rx_bits != data_bits)
     Perr = Nerr / np.size(data_bits)
     
     #print(f"""BER: {Perr:.1E}""")
-    return Perr, rx_fix_symb.reshape(-1)
+    return Perr, rx_fix_symb.reshape(-1),all_symb
 
 #%% Ejecucion
 if __name__ == "__main__":    
@@ -149,7 +150,7 @@ if __name__ == "__main__":
 
     for i, a in enumerate(cant_peines):
         for j, b in enumerate(cant_bloques):
-            Perr, rx_fix_symb = sim(20,a,b)
+            Perr, rx_fix_symb,all_symb = sim(20,a,b)
             ber_matrix[i, j] =  Perr
         
     

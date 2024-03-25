@@ -61,7 +61,7 @@ fig=1
 cant_peines=[2,8,16,32]
 cant_bloques=[2,20,200]
 
-ber_snrs=simular_variacion_bloques_peines(snr_vec, cant_peines,cant_bloques, hab_peine=True, variante=True)
+ber_snrs=simular_variacion_bloques_peines(snr_vec, cant_peines,cant_bloques, hab_peine=True, variante=False)
 
 
 
