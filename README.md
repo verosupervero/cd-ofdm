@@ -11,11 +11,12 @@ TP de Comunicaciones Digitales I - FIUBA
 - Demodulacion, obtener bits y contar taza de error
 
 ## TO-DO
-- Implementar canal fading
+- Reimplementar canal fading con sinc que modula
 - Ver como anda el LS con ese canal
-- Implementar MMSE
-- Profit?
+- Remplementar MMSE
+- Ver como funciona waterfilling: es una preecualizacion en el transmisor, preamplifica las subportadoras para las cuales el canal mas atenua, esto requiere conocimiento de la rta del canal de parte del transmisor. Seguramente el receptor le tiene que transmitir el canal de algun modo(algun piloto, un ping pong o ver que lo manden cuando hacen sincronizacion).
 
 ## Referencias
-- van der Beek: la papa. De ahi sale todo
-- del Proakis algo (seccion 13.6 Multicarrier Modulation)
+- modelos matematicos en las refs del informe
+- van der Beek: la papa. De ahi sale todo lo basico.
+- del Proakis ver seccion de fading channels (seccion 13.6 Multicarrier Modulation)
